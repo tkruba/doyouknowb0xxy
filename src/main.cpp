@@ -27,6 +27,8 @@
 
 int main() {
 
+
+    bool use2ndUp = false;
     set_sys_clock_khz(1000*us, true);
     stdio_init_all();
 

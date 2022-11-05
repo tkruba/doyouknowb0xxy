@@ -14,6 +14,7 @@ struct RuntimeRemapping {
         uint8_t configured;
 
         uint8_t startPin;
+	uint8_t up2Pin;
         uint8_t rightPin;
         uint8_t downPin;
         uint8_t leftPin;
