@@ -6,6 +6,9 @@ namespace Xbox360 {
 // Back is inaccessible, idk whether that's a problem, is it *ever* mandatory in place of B ?
 
 void actuateXbox360Report(GpioToButtonSets::F1::ButtonSet buttonSet) {
+    
+    buttonSet.up = buttonSet.up || buttonSet.up2;
+    
     bool left = buttonSet.left && !(buttonSet.ms);
     bool right = buttonSet.right && !(buttonSet.ms);
     bool up = buttonSet.up && !(buttonSet.ms);
