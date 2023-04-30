@@ -3,8 +3,6 @@
 namespace DACAlgorithms {
 namespace Xbox360 {
 
-// Back is inaccessible, idk whether that's a problem, is it *ever* mandatory in place of B ?
-
 void actuateXbox360Report(GpioToButtonSets::F1::ButtonSet buttonSet) {
     
     buttonSet.up = buttonSet.up || buttonSet.up2;
@@ -19,22 +17,27 @@ void actuateXbox360Report(GpioToButtonSets::F1::ButtonSet buttonSet) {
     bool dUp = buttonSet.up && buttonSet.ms;
     bool dDown = buttonSet.down && buttonSet.ms;
 
+    bool home = buttonSet.start && buttonSet.ms;        // Xbox
+    bool start = buttonSet.start && !(buttonSet.ms);    // Menu
+    bool back = buttonSet.b && buttonSet.ms;            // View
+    bool b = buttonSet.b && !(buttonSet.ms);
+
     USBConfigurations::Xbox360::ControllerReport &xInputReport = USBConfigurations::Xbox360::xInputReport;
     xInputReport.reportId = 0;
     xInputReport.rightStickPress = buttonSet.my;
     xInputReport.leftStickPress = buttonSet.mx;
-    xInputReport.back = 0;
-    xInputReport.start = buttonSet.start;
+    xInputReport.back = back;
+    xInputReport.start = start;
     xInputReport.dRight = dRight;
     xInputReport.dLeft = dLeft;
     xInputReport.dDown = dDown;
     xInputReport.dUp = dUp;
     xInputReport.zl = buttonSet.ls;
     xInputReport.zr = buttonSet.z;
-    xInputReport.home = 0;
+    xInputReport.home = home;
     xInputReport.pad1 = 0;
     xInputReport.a = buttonSet.a;
-    xInputReport.b = buttonSet.b;
+    xInputReport.b = b;
     xInputReport.x = buttonSet.x;
     xInputReport.y = buttonSet.y;
 	xInputReport.leftTrigger = buttonSet.l ? 255 : 0;
