@@ -43,8 +43,41 @@ GCReport getGCReport(GpioToButtonSets::F1::ButtonSet buttonSet) {
 
     /* 2IP No reactivation */
     
-    if (bs.left && bs.right) cancel=true;   
-    if (!bs.left || !bs.right) cancel=false;
+    if (bs.right && !right_wasPressed) right_isTheMostRecentPressed=true;
+    if (bs.left && !left_wasPressed) right_isTheMostRecentPressed=false;
+    if (bs.up && !up_wasPressed) up_isTheMostRecentPressed=true;
+    if (bs.down && !down_wasPressed) up_isTheMostRecentPressed=false;
+ 
+    left_wasPressed = bs.left;
+    right_wasPressed = bs.right;
+    up_wasPressed = bs.up;
+    down_wasPressed = bs.down;
+ 
+    if (bs.left && bs.right) {
+        if (right_isTheMostRecentPressed) bs.left = false;
+        else bs.right = false;
+    }
+    if (bs.down && bs.up) {
+        if (up_isTheMostRecentPressed) bs.down = false;
+        else bs.up = false;
+    }
+#elif ULT_NEUTRAL
+    /* Neutral SOCD */
+    if (bs.left && bs.right) {
+        bs.left = false;
+        bs.right = false;
+    }
+
+    if (bs.down && bs.up) {
+        bs.down = false;
+        bs.up = false;
+    }
+#else
+    /* 2IP no reactivation */
+    
+    if (left_wasPressed && bs.left && bs.right && !right_wasPressed) left_outlawUntilRelease=true;
+    if (right_wasPressed && bs.left && bs.right && !left_wasPressed) right_outlawUntilRelease=true;
+>>>>>>> a0c6d2425f1ff9861b82e7fa28e6325f3996d7c1
     if (up_wasPressed && bs.up && bs.down && !down_wasPressed) up_outlawUntilRelease=true;
     if (down_wasPressed && bs.up && bs.down && !up_wasPressed) down_outlawUntilRelease=true;
 
