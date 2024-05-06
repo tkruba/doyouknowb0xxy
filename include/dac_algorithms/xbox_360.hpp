@@ -8,9 +8,9 @@
 namespace DACAlgorithms {
 namespace Xbox360 {
 
-// Back is inaccessible, idk whether that's a problem
-
 void actuateXbox360Report(GpioToButtonSets::F1::ButtonSet buttonSet);
+
+void actuateLeverlessReport(GpioToButtonSets::F1::ButtonSet buttonSet);
 
 }
 }

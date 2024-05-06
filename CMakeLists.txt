@@ -7,7 +7,7 @@ include(pico_sdk_import.cmake)
 
 pico_sdk_init()
 
-project(pico_rectangle CXX C)
+project(doyouknowb0xxy CXX C)
 include_directories(include pico-joybus-comms/include)
 
 # Define the options as a list
@@ -16,10 +16,10 @@ set(ULT_OPTIONS "ULT_2IP_NO_REAC" "ULT_2IP_WITH_REAC" "ULT_NEUTRAL")
 # Loop through the options and create a target for each one
 foreach(ULT_OPTION ${ULT_OPTIONS})
   # Create a target name for the current option
-  set(TARGET_NAME "pico_rectangle_${ULT_OPTION}")
+  set(TARGET_NAME "doyouknowb0xxy_${ULT_OPTION}")
   # If this is the default option, set the output file name to "pico_rectangle"
   if(${ULT_OPTION} STREQUAL "ULT_2IP_NO_REAC")
-    set(TARGET_NAME "pico_rectangle")
+    set(TARGET_NAME "doyouknowb0xxy_${ULT_OPTION}")
   endif()
   
   # Add an executable target for the current option

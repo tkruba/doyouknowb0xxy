@@ -23,6 +23,7 @@ Check the boxes for any mode that is affected by your changes. Make sure to note
 - [ ] GP5 - Wired Fight Pad Pro with Melee
 - [ ] GP6 - Ultimate (Adapter) mode
 - [ ] GP7 - P+ (Adapter) mode
+- [ ] GP12 - XInput (Leverless Fightstick via Xbox360)
 - [ ] GP13 - XInput with Melee
 - [ ] GP14 - XInput (dedicated Xbox360)
 - [ ] GP16 - BOOTSEL

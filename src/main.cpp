@@ -56,7 +56,7 @@ int main() {
     #endif
     ;
 
-    std::vector<uint8_t> modePins = { 22, 21, 20, 16, 17, 14, 13, 7, 6, 5, 4, 2, keyboardPin }; // DO NOT USE PIN GP15
+    std::vector<uint8_t> modePins = { 22, 21, 20, 16, 17, 14, 13, 12, 7, 6, 5, 4, 2, keyboardPin }; // DO NOT USE PIN GP15
 
     for (uint8_t modePin : modePins) {
         gpio_init(modePin);
@@ -112,6 +112,11 @@ int main() {
     // 19 - GP14 - A - Xbox360/Xbox360 (aka XInput)
     if (!gpio_get(14)) USBConfigurations::Xbox360::enterMode([](){
         DACAlgorithms::Xbox360::actuateXbox360Report(GpioToButtonSets::F1::defaultConversion());
+    });
+
+    // ? - GP12 - CUp - Leverless/Xbox360 (aka XInput)
+    if (!gpio_get(12)) USBConfigurations::Xbox360::enterMode([](){
+        DACAlgorithms::Xbox360::actuateLeverlessReport(GpioToButtonSets::F1::defaultConversion());
     });
 
     // 27 - GP21 - X - Melee / HID
