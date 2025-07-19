@@ -59,7 +59,7 @@ jobs:
         choco install python --version=3.12.6
         choco install ninja
         choco install git
-        choco install arm-none-eabi-gcc
+        choco install gg-arm-embedded
       shell: powershell
 
 #    - name: Install dependencies (macOS)
