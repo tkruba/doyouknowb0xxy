@@ -72,6 +72,17 @@ jobs:
         cmake --version
       shell: powershell
 
+    - name: Verify Toolchain File
+      run: |
+        $toolchainFile = "${{ github.workspace }}/${{ env.PICO_SDK_DIR }}/pico_sdk_tools.cmake"
+        if (Test-Path $toolchainFile) {
+          Write-Output "Toolchain file found: $toolchainFile"
+        } else {
+          Write-Error "Toolchain file not found: $toolchainFile"
+          exit 1
+        }
+      shell: powershell
+
     - name: Create Build Environment
       run: |
         Remove-Item -Path ${{ github.workspace }}/build -Recurse -Force -ErrorAction SilentlyContinue
