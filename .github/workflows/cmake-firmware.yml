@@ -54,11 +54,11 @@ jobs:
 
     - name: Install dependencies (Windows)
       run: |
-        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
-        choco install python --version=3.12.6
-        choco install ninja
-        choco install git
-        choco install gcc-arm-embedded
+        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' --fail-on-error
+        choco install python --version=3.12.6 --fail-on-error
+        choco install ninja --fail-on-error
+        choco install git --fail-on-error
+        choco install gcc-arm-embedded --fail-on-error
       shell: powershell
 
     - name: Verify CMakeLists.txt structure
