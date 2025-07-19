@@ -18,74 +18,107 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-      # Can support other os', such as windows-latest and macos-latest.
-      # os: [ubuntu-latest, windows-latest]
-      # But there's syntactic toolchain differences, especially with gnu coreutils, so we'll leave that for later.
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
-    # TODO: The pico-sdk checkout can probably be cached, as well as the apt update (probably changes more frequently) and cmake install (less frequent changes).
-    # Doing this could save on a lot of the Action setup time, at the cost of some of the Cache Size (so less artifacts could be stored).
-    # https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#usage-limits-and-eviction-policy
     steps:
-    - uses: actions/checkout@v2
-      name: Checkout repository
+    - name: Checkout repository
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.event.pull_request.head.sha }}
-    - uses: actions/checkout@master
-      name: Checkout pico sdk
+        submodules: recursive
+
+    - name: Checkout Pico SDK
+      uses: actions/checkout@v4
       with:
         repository: raspberrypi/pico-sdk
         path: ${{ env.PICO_SDK_DIR }}
-    # From https://docs.google.com/document/d/1-Lx3X7zIwRscp6N76_usy5fdwulo6-chML3Xjfz3zaY/
-    # CMake assumes the sdk path is relative to the `build` directory.
-    - name: Set pico-sdk path in CMakeLists.
-      run: |
-        sed 's/#set(PICO_SDK_PATH "..\/..\/pico-sdk"/set(PICO_SDK_PATH "..\/pico-sdk"/' -i CMakeLists.txt
-        cat CMakeLists.txt
+        submodules: recursive
 
-    # From https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf
-    - name: Update apt and install cmake
+    - name: Cache Pico SDK and dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ env.PICO_SDK_DIR }}
+          ~/.cache/pip
+          ~/Library/Caches/Homebrew
+          C:\ProgramData\Chocolatey
+        key: ${{ runner.os }}-pico-sdk-${{ hashFiles('**/pico-sdk/**') }}
+        restore-keys: ${{ runner.os }}-pico-sdk-
+
+    - name: Install dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
       run: |
-        sudo apt update -y
-        sudo apt install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential
+        sudo apt-get update -y
+        sudo apt-get install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib build-essential
+      shell: bash
+
+    - name: Install dependencies (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+        choco install python --version=3.12.6
+        choco install ninja
+        choco install git
+        choco install arm-none-eabi-gcc
+      shell: powershell
+
+    - name: Install dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install cmake
+        brew install python3
+        brew install ninja
+        brew install arm-none-eabi-gcc
+      shell: bash
+
+    - name: Set PICO_SDK_PATH in CMakeLists.txt
+      run: |
+        sed -i 's|#set(PICO_SDK_PATH.*|set(PICO_SDK_PATH "${{ github.workspace }}/${{ env.PICO_SDK_DIR }}")|' CMakeLists.txt
+        cat CMakeLists.txt
+      shell: bash
+      working-directory: ${{ github.workspace }}
 
     - name: Create Build Environment
-      run: cmake -E make_directory ${{github.workspace}}/build
-
-    - name: CMake the Firmware
-      working-directory: ${{github.workspace}}/build
+      run: cmake -E make_directory ${{ github.workspace }}/build
       shell: bash
-      # From Step 3: https://docs.google.com/document/d/1-Lx3X7zIwRscp6N76_usy5fdwulo6-chML3Xjfz3zaY/edit
-      run: cmake ..
 
-    - name: Final `make`
-      working-directory: ${{github.workspace}}/build
+    - name: Configure CMake
+      working-directory: ${{ github.workspace }}/build
+      run: |
+        cmake .. -DPICO_BOARD=pico
       shell: bash
-      # From Step 3: https://docs.google.com/document/d/1-Lx3X7zIwRscp6N76_usy5fdwulo6-chML3Xjfz3zaY/edit
-      run: make
 
-    - name: List things
-      working-directory: ${{github.workspace}}/build
+    - name: Build Firmware
+      working-directory: ${{ github.workspace }}/build
+      run: |
+        cmake --build . --parallel
+      shell: bash
+
+    - name: List Build Artifacts
+      working-directory: ${{ github.workspace }}/build
       run: ls -laR
+      shell: bash
 
-    # Note: Artifacts are uploaded as a ZIP, which currently cannot be customized. https://github.com/actions/upload-artifact#zipped-artifact-downloads
-    # This generally reduces the uf2 file size between 30-60%.
-    # TODO: Tweak artifact retention limit. 90 days is the default and the max, but users can always push an empty commit to their PR to build and download the latest uf2!
     - name: Upload firmware artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: pico_rectangle_${{ github.sha }}.uf2
-        path: ${{github.workspace}}/build/pico_rectangle.uf2
+        path: ${{ github.workspace }}/build/pico_rectangle.uf2
         if-no-files-found: error
+        retention-days: 30
+
     - name: Upload firmware (Ult with 2IP With Reactivation SOCD) artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: pico_rectangle_ult_2ip_with_reac_socd_${{ github.sha }}.uf2
-        path: ${{github.workspace}}/build/pico_rectangle_ULT_2IP_WITH_REAC.uf2
+        path: ${{ github.workspace }}/build/pico_rectangle_ULT_2IP_WITH_REAC.uf2
         if-no-files-found: error
+        retention-days: 30
+
     - name: Upload firmware (Ult with Neutral SOCD) artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: pico_rectangle_ult_neutral_socd_${{ github.sha }}.uf2
-        path: ${{github.workspace}}/build/pico_rectangle_ULT_NEUTRAL.uf2
+        path: ${{ github.workspace }}/build/pico_rectangle_ULT_NEUTRAL.uf2
         if-no-files-found: error
+        retention-days: 30
