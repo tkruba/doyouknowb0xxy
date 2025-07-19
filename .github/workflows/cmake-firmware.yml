@@ -18,8 +18,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        #os: [ubuntu-latest, windows-latest, macos-latest]
         os: [windows-latest]
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -45,13 +45,6 @@ jobs:
         key: ${{ runner.os }}-pico-sdk-${{ hashFiles('**/pico-sdk/**') }}
         restore-keys: ${{ runner.os }}-pico-sdk-
 
-#    - name: Install dependencies (Ubuntu)
-#      if: matrix.os == 'ubuntu-latest'
-#      run: |
-#        sudo apt-get update -y
-#        sudo apt-get install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib build-essential
-#      shell: bash
-
     - name: Install dependencies (Windows)
       if: matrix.os == 'windows-latest'
       run: |
@@ -61,15 +54,6 @@ jobs:
         choco install git
         choco install gcc-arm-embedded
       shell: powershell
-
-#    - name: Install dependencies (macOS)
-#      if: matrix.os == 'macos-latest'
-#      run: |
-#        brew install cmake
-#        brew install python3
-#        brew install ninja
-#        brew install arm-none-eabi-gcc
-#      shell: bash
 
     - name: Set PICO_SDK_PATH in CMakeLists.txt
       run: |
@@ -87,27 +71,58 @@ jobs:
         ninja --version
         cmake --version
       shell: powershell
-      
+
+    - name: Verify toolchain (Ubuntu/macOS)
+      if: matrix.os != 'windows-latest'
+      run: |
+        arm-none-eabi-gcc --version
+        arm-none-eabi-objdump --version
+        ninja --version
+        cmake --version
+      shell: bash
+
     - name: Create Build Environment
-      run: cmake -E make_directory ${{ github.workspace }}/build
-      shell: powershell
+      run: |
+        cmake -E remove_directory ${{ github.workspace }}/build
+        cmake -E make_directory ${{ github.workspace }}/build
+      shell: bash
+
+    - name: List Build Directory (Pre-Configure)
+      working-directory: ${{ github.workspace }}/build
+      shell: ${{ matrix.os == 'windows-latest' && 'powershell' || 'bash' }}
+      run: dir -Recurse
 
     - name: Configure CMake
       working-directory: ${{ github.workspace }}/build
+      shell: ${{ matrix.os == 'windows-latest' && 'powershell' || 'bash' }}
       run: |
-        cmake .. -DPICO_BOARD=pico
-      shell: powershell
+        cmake .. -G Ninja -DPICO_BOARD=pico -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/${{ env.PICO_SDK_DIR }}/pico_sdk_tools.cmake
+      env:
+        PICO_SDK_PATH: ${{ github.workspace }}/${{ env.PICO_SDK_DIR }}
+
+    - name: Verify CMake Generator
+      working-directory: ${{ github.workspace }}/build
+      shell: ${{ matrix.os == 'windows-latest' && 'powershell' || 'bash' }}
+      run: |
+        cmake -L | findstr "CMAKE_GENERATOR"
+        dir CMakeFiles | findstr "cmake"
 
     - name: Build Firmware
       working-directory: ${{ github.workspace }}/build
+      shell: ${{ matrix.os == 'windows-latest' && 'powershell' || 'bash' }}
       run: |
         cmake --build . --parallel
-      shell: powershell
 
-    - name: List Build Artifacts
+    - name: List Build Artifacts (Post-Build)
       working-directory: ${{ github.workspace }}/build
-      run: ls -laR
-      shell: powershell
+      shell: ${{ matrix.os == 'windows-latest' && 'powershell' || 'bash' }}
+      run: dir -Recurse
+
+    - name: Check Boot Stage 2 Output
+      working-directory: ${{ github.workspace }}/build/pico-sdk/src/rp2040/boot_stage2
+      shell: ${{ matrix.os == 'windows-latest' && 'powershell' || 'bash' }}
+      run: dir -Recurse
+      continue-on-error: true
 
     - name: Upload firmware artifact
       uses: actions/upload-artifact@v4
