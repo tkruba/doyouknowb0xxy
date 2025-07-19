@@ -71,7 +71,7 @@ void actuateLeverlessReport(GpioToButtonSets::F1::ButtonSet buttonSet) {
     bool dDown = buttonSet.down && !(mod);
 
     // Left stick + Modifer button -> D-Pad
-    bool lleft = buttonSet.left && mod;
+    bool left = buttonSet.left && mod;
     bool right = buttonSet.right && mod;
     bool up = buttonSet.up && mod;
     bool down = buttonSet.down && mod;
