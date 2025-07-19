@@ -75,29 +75,29 @@ jobs:
       run: |
         sed -i 's|#set(PICO_SDK_PATH.*|set(PICO_SDK_PATH "${{ github.workspace }}/${{ env.PICO_SDK_DIR }}")|' CMakeLists.txt
         cat CMakeLists.txt
-      shell: bash
+      shell: powershell
       working-directory: ${{ github.workspace }}
 
     - name: Create Build Environment
       run: cmake -E make_directory ${{ github.workspace }}/build
-      shell: bash
+      shell: powershell
 
     - name: Configure CMake
       working-directory: ${{ github.workspace }}/build
       run: |
         cmake .. -DPICO_BOARD=pico
-      shell: bash
+      shell: powershell
 
     - name: Build Firmware
       working-directory: ${{ github.workspace }}/build
       run: |
         cmake --build . --parallel
-      shell: bash
+      shell: powershell
 
     - name: List Build Artifacts
       working-directory: ${{ github.workspace }}/build
       run: ls -laR
-      shell: bash
+      shell: powershell
 
     - name: Upload firmware artifact
       uses: actions/upload-artifact@v4
