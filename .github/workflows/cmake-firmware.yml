@@ -51,16 +51,16 @@ jobs:
 
     - name: Verify CMakeLists.txt structure
       run: |
-        grep -E "cmake_minimum_required|project\(|pico_sdk_init" CMakeLists.txt || echo "Warning: CMakeLists.txt may be missing required commands"
-        echo "Expected order: cmake_minimum_required, project, include(pico_sdk_init.cmake), pico_sdk_init"
-      shell: bash
+        Select-String -Path CMakeLists.txt -Pattern "cmake_minimum_required|project\(|pico_sdk_init" | ForEach-Object { $_.Line } | Write-Output
+        Write-Output "Expected order: cmake_minimum_required, project, include(pico_sdk_init.cmake), pico_sdk_init"
+      shell: powershell
       working-directory: ${{ github.workspace }}
 
     - name: Set PICO_SDK_PATH in CMakeLists.txt
       run: |
-        sed -i 's|#set(PICO_SDK_PATH.*|set(PICO_SDK_PATH "${{ github.workspace }}/${{ env.PICO_SDK_DIR }}")|' CMakeLists.txt
-        cat CMakeLists.txt
-      shell: bash
+        (Get-Content CMakeLists.txt) -replace '#set\(PICO_SDK_PATH.*', 'set(PICO_SDK_PATH "${{ github.workspace }}/${{ env.PICO_SDK_DIR }}")' | Set-Content CMakeLists.txt
+        Get-Content CMakeLists.txt
+      shell: powershell
       working-directory: ${{ github.workspace }}
 
     - name: Verify toolchain (Windows)
@@ -74,13 +74,19 @@ jobs:
 
     - name: Create Build Environment
       run: |
-        cmake -E remove_directory ${{ github.workspace }}/build
-        cmake -E make_directory ${{ github.workspace }}/build
-      shell: bash
+        Remove-Item -Path ${{ github.workspace }}/build -Recurse -Force -ErrorAction SilentlyContinue
+        New-Item -Path ${{ github.workspace }}/build -ItemType Directory -Force
+      shell: powershell
 
-    - name: List Build Directory (Pre-Configure)
-      working-directory: ${{ github.workspace }}/build
-      run: dir -Recurse
+    - name: Verify Build Directory
+      run: |
+        if (Test-Path ${{ github.workspace }}/build) {
+          Write-Output "Build directory exists"
+          dir ${{ github.workspace }}/build -Recurse
+        } else {
+          Write-Error "Build directory does not exist"
+          exit 1
+        }
       shell: powershell
 
     - name: Configure CMake
