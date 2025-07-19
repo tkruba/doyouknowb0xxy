@@ -31,6 +31,18 @@ jobs:
         path: ${{ env.PICO_SDK_DIR }}
         submodules: recursive
 
+    - name: Verify Pico SDK Checkout
+      run: |
+        if (Test-Path ${{ env.PICO_SDK_DIR }}) {
+          Write-Output "Pico SDK directory exists"
+          dir ${{ env.PICO_SDK_DIR }} -Recurse
+        } else {
+          Write-Error "Pico SDK directory does not exist"
+          exit 1
+        }
+      shell: powershell
+      working-directory: ${{ github.workspace }}
+
     - name: Cache Pico SDK and dependencies
       uses: actions/cache@v4
       with:
