@@ -36,7 +36,15 @@ jobs:
         Write-Output "Checking Pico SDK directory: ${{ env.PICO_SDK_DIR }}"
         if (Test-Path ${{ env.PICO_SDK_DIR }}) {
           Write-Output "Pico SDK directory exists"
+          git -C ${{ env.PICO_SDK_DIR }} rev-parse HEAD | Write-Output
+          Write-Output "Listing files in ${{ env.PICO_SDK_DIR }} for pico_sdk_tools.cmake"
           dir ${{ env.PICO_SDK_DIR }} -Recurse | Where-Object { $_ -match "pico_sdk_tools.cmake" } | Write-Output
+          if (Test-Path ${{ env.PICO_SDK_DIR }}/pico_sdk_tools.cmake) {
+            Write-Output "Found pico_sdk_tools.cmake"
+          } else {
+            Write-Error "pico_sdk_tools.cmake not found in ${{ env.PICO_SDK_DIR }}"
+            exit 1
+          }
         } else {
           Write-Error "Pico SDK directory does not exist at ${{ env.PICO_SDK_DIR }}"
           exit 1
