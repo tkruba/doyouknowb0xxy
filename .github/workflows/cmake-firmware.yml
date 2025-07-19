@@ -33,11 +33,12 @@ jobs:
 
     - name: Verify Pico SDK Checkout
       run: |
+        Write-Output "Checking Pico SDK directory: ${{ env.PICO_SDK_DIR }}"
         if (Test-Path ${{ env.PICO_SDK_DIR }}) {
           Write-Output "Pico SDK directory exists"
-          dir ${{ env.PICO_SDK_DIR }} -Recurse
+          dir ${{ env.PICO_SDK_DIR }} -Recurse | Where-Object { $_ -match "pico_sdk_tools.cmake" } | Write-Output
         } else {
-          Write-Error "Pico SDK directory does not exist"
+          Write-Error "Pico SDK directory does not exist at ${{ env.PICO_SDK_DIR }}"
           exit 1
         }
       shell: powershell
@@ -54,11 +55,13 @@ jobs:
 
     - name: Install dependencies (Windows)
       run: |
+        Write-Output "Installing dependencies with Chocolatey"
         choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' --fail-on-error
         choco install python --version=3.12.6 --fail-on-error
         choco install ninja --fail-on-error
         choco install git --fail-on-error
         choco install gcc-arm-embedded --fail-on-error
+        Write-Output "Dependency installation completed"
       shell: powershell
 
     - name: Verify CMakeLists.txt structure
@@ -78,6 +81,7 @@ jobs:
     - name: Verify toolchain (Windows)
       run: |
         $env:Path += ";C:\ProgramData\Chocolatey\lib\gcc-arm-embedded\tools\gcc-arm-none-eabi-10.3-2021.10\bin;C:\ProgramData\Chocolatey\bin"
+        Write-Output "Verifying toolchain components"
         arm-none-eabi-gcc --version
         arm-none-eabi-objdump --version
         ninja --version
@@ -87,6 +91,7 @@ jobs:
     - name: Verify Toolchain File
       run: |
         $toolchainFile = "${{ github.workspace }}/${{ env.PICO_SDK_DIR }}/pico_sdk_tools.cmake"
+        Write-Output "Checking toolchain file: $toolchainFile"
         if (Test-Path $toolchainFile) {
           Write-Output "Toolchain file found: $toolchainFile"
         } else {
