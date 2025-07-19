@@ -59,11 +59,10 @@ jobs:
       run: |
         sed -i 's|#set(PICO_SDK_PATH.*|set(PICO_SDK_PATH "${{ github.workspace }}/${{ env.PICO_SDK_DIR }}")|' CMakeLists.txt
         cat CMakeLists.txt
-      shell: bash
+      shell: powershell
       working-directory: ${{ github.workspace }}
 
     - name: Verify toolchain (Windows)
-      if: matrix.os == 'windows-latest'
       run: |
         $env:Path += ";C:\ProgramData\Chocolatey\lib\gcc-arm-embedded\tools\gcc-arm-none-eabi-10.3-2021.10\bin"
         arm-none-eabi-gcc --version
@@ -72,29 +71,20 @@ jobs:
         cmake --version
       shell: powershell
 
-    - name: Verify toolchain (Ubuntu/macOS)
-      if: matrix.os != 'windows-latest'
-      run: |
-        arm-none-eabi-gcc --version
-        arm-none-eabi-objdump --version
-        ninja --version
-        cmake --version
-      shell: bash
-
     - name: Create Build Environment
       run: |
         cmake -E remove_directory ${{ github.workspace }}/build
         cmake -E make_directory ${{ github.workspace }}/build
-      shell: bash
+      shell: powershell
 
     - name: List Build Directory (Pre-Configure)
       working-directory: ${{ github.workspace }}/build
-      shell: ${{ matrix.os == 'windows-latest' && 'powershell' || 'bash' }}
+      shell: powershell
       run: dir -Recurse
 
     - name: Configure CMake
       working-directory: ${{ github.workspace }}/build
-      shell: ${{ matrix.os == 'windows-latest' && 'powershell' || 'bash' }}
+      shell: powershell
       run: |
         cmake .. -G Ninja -DPICO_BOARD=pico -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/${{ env.PICO_SDK_DIR }}/pico_sdk_tools.cmake
       env:
@@ -102,25 +92,25 @@ jobs:
 
     - name: Verify CMake Generator
       working-directory: ${{ github.workspace }}/build
-      shell: ${{ matrix.os == 'windows-latest' && 'powershell' || 'bash' }}
+      shell: powershell
       run: |
         cmake -L | findstr "CMAKE_GENERATOR"
         dir CMakeFiles | findstr "cmake"
 
     - name: Build Firmware
       working-directory: ${{ github.workspace }}/build
-      shell: ${{ matrix.os == 'windows-latest' && 'powershell' || 'bash' }}
+      shell: powershell
       run: |
         cmake --build . --parallel
 
     - name: List Build Artifacts (Post-Build)
       working-directory: ${{ github.workspace }}/build
-      shell: ${{ matrix.os == 'windows-latest' && 'powershell' || 'bash' }}
+      shell: powershell
       run: dir -Recurse
 
     - name: Check Boot Stage 2 Output
       working-directory: ${{ github.workspace }}/build/pico-sdk/src/rp2040/boot_stage2
-      shell: ${{ matrix.os == 'windows-latest' && 'powershell' || 'bash' }}
+      shell: powershell
       run: dir -Recurse
       continue-on-error: true
 
