@@ -28,7 +28,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         repository: raspberrypi/pico-sdk
-        ref: 1.5.1
+        ref: 2.0.0
         path: ${{ env.PICO_SDK_DIR }}
         submodules: recursive
 
@@ -39,13 +39,23 @@ jobs:
           Write-Output "Pico SDK directory exists"
           Write-Output "Pico SDK commit:"
           git -C ${{ env.PICO_SDK_DIR }} rev-parse HEAD | Write-Output
-          Write-Output "Listing files in ${{ env.PICO_SDK_DIR }} for pico_sdk_tools.cmake"
+          Write-Output "Pico SDK tag:"
+          git -C ${{ env.PICO_SDK_DIR }} describe --tags | Write-Output
+          Write-Output "Listing key files in ${{ env.PICO_SDK_DIR }}"
           $toolchainFile = Get-ChildItem -Path ${{ env.PICO_SDK_DIR }} -Recurse -Include pico_sdk_tools.cmake | Select-Object -First 1
+          $importFile = Get-ChildItem -Path ${{ env.PICO_SDK_DIR }} -Recurse -Include pico_sdk_import.cmake | Select-Object -First 1
           if ($toolchainFile) {
             Write-Output "Found pico_sdk_tools.cmake at $($toolchainFile.FullName)"
             $env:TOOLCHAIN_FILE_PATH = $toolchainFile.FullName
           } else {
             Write-Error "pico_sdk_tools.cmake not found in ${{ env.PICO_SDK_DIR }}"
+            dir ${{ env.PICO_SDK_DIR }} -Recurse | Write-Output
+            exit 1
+          }
+          if ($importFile) {
+            Write-Output "Found pico_sdk_import.cmake at $($importFile.FullName)"
+          } else {
+            Write-Error "pico_sdk_import.cmake not found in ${{ env.PICO_SDK_DIR }}"
             dir ${{ env.PICO_SDK_DIR }} -Recurse | Write-Output
             exit 1
           }
@@ -79,7 +89,7 @@ jobs:
     - name: Verify CMakeLists.txt structure
       run: |
         Select-String -Path CMakeLists.txt -Pattern "cmake_minimum_required|project\(|pico_sdk_init" | ForEach-Object { $_.Line } | Write-Output
-        Write-Output "Expected order: cmake_minimum_required, project, include(pico_sdk_init.cmake), pico_sdk_init"
+        Write-Output "Expected order: cmake_minimum_required, project, include(pico_sdk_import.cmake), pico_sdk_init"
       shell: powershell
       working-directory: ${{ github.workspace }}
 
