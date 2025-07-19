@@ -45,12 +45,12 @@ jobs:
         key: ${{ runner.os }}-pico-sdk-${{ hashFiles('**/pico-sdk/**') }}
         restore-keys: ${{ runner.os }}-pico-sdk-
 
-    - name: Install dependencies (Ubuntu)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib build-essential
-      shell: bash
+#    - name: Install dependencies (Ubuntu)
+#      if: matrix.os == 'ubuntu-latest'
+#      run: |
+#        sudo apt-get update -y
+#        sudo apt-get install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib build-essential
+#      shell: bash
 
     - name: Install dependencies (Windows)
       if: matrix.os == 'windows-latest'
@@ -62,14 +62,14 @@ jobs:
         choco install arm-none-eabi-gcc
       shell: powershell
 
-    - name: Install dependencies (macOS)
-      if: matrix.os == 'macos-latest'
-      run: |
-        brew install cmake
-        brew install python3
-        brew install ninja
-        brew install arm-none-eabi-gcc
-      shell: bash
+#    - name: Install dependencies (macOS)
+#      if: matrix.os == 'macos-latest'
+#      run: |
+#        brew install cmake
+#        brew install python3
+#        brew install ninja
+#        brew install arm-none-eabi-gcc
+#      shell: bash
 
     - name: Set PICO_SDK_PATH in CMakeLists.txt
       run: |
