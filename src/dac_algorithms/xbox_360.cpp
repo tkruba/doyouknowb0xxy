@@ -65,16 +65,16 @@ void actuateLeverlessReport(GpioToButtonSets::F1::ButtonSet buttonSet) {
     // MY -> up (you can never have too many ups)
     buttonSet.up = (buttonSet.up2 || buttonSet.my);
 
-    bool left = buttonSet.left && !(mod);
-    bool right = buttonSet.right && !(mod);
-    bool up = buttonSet.up && !(mod);
-    bool down = buttonSet.down && !(mod);
+    bool dLeft = buttonSet.left && !(mod);
+    bool dright = buttonSet.right && !(mod);
+    bool dUp = buttonSet.up && !(mod);
+    bool dDown = buttonSet.down && !(mod);
 
     // Left stick + Modifer button -> D-Pad
-    bool dLeft = buttonSet.left && mod;
-    bool dRight = buttonSet.right && mod;
-    bool dUp = buttonSet.up && mod;
-    bool dDown = buttonSet.down && mod;
+    bool lleft = buttonSet.left && mod;
+    bool right = buttonSet.right && mod;
+    bool up = buttonSet.up && mod;
+    bool down = buttonSet.down && mod;
 
     // Start +/- Modifier button -> Home / Photo
     bool start = buttonSet.start && (!mod);
