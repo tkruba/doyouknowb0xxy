@@ -6,7 +6,7 @@ on:
     types: [opened, edited, closed, reopened]
 
 env:
-  PICO_SDK_DIR: ./pico-sdk
+  PICO_SDK_DIR: pico-sdk
   FIRMWARE_ARTIFACT_PATH: ./build/
 
 concurrency:
@@ -15,10 +15,7 @@ concurrency:
 
 jobs:
   build-firmware:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest]
+    runs-on: windows-latest
 
     steps:
     - name: Checkout repository
@@ -39,14 +36,11 @@ jobs:
       with:
         path: |
           ${{ env.PICO_SDK_DIR }}
-          ~/.cache/pip
-          ~/Library/Caches/Homebrew
           C:\ProgramData\Chocolatey
         key: ${{ runner.os }}-pico-sdk-${{ hashFiles('**/pico-sdk/**') }}
         restore-keys: ${{ runner.os }}-pico-sdk-
 
     - name: Install dependencies (Windows)
-      if: matrix.os == 'windows-latest'
       run: |
         choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
         choco install python --version=3.12.6
@@ -55,16 +49,23 @@ jobs:
         choco install gcc-arm-embedded
       shell: powershell
 
+    - name: Verify CMakeLists.txt structure
+      run: |
+        grep -E "cmake_minimum_required|project\(|pico_sdk_init" CMakeLists.txt || echo "Warning: CMakeLists.txt may be missing required commands"
+        echo "Expected order: cmake_minimum_required, project, include(pico_sdk_init.cmake), pico_sdk_init"
+      shell: bash
+      working-directory: ${{ github.workspace }}
+
     - name: Set PICO_SDK_PATH in CMakeLists.txt
       run: |
         sed -i 's|#set(PICO_SDK_PATH.*|set(PICO_SDK_PATH "${{ github.workspace }}/${{ env.PICO_SDK_DIR }}")|' CMakeLists.txt
         cat CMakeLists.txt
-      shell: powershell
+      shell: bash
       working-directory: ${{ github.workspace }}
 
     - name: Verify toolchain (Windows)
       run: |
-        $env:Path += ";C:\ProgramData\Chocolatey\lib\gcc-arm-embedded\tools\gcc-arm-none-eabi-10.3-2021.10\bin"
+        $env:Path += ";C:\ProgramData\Chocolatey\lib\gcc-arm-embedded\tools\gcc-arm-none-eabi-10.3-2021.10\bin;C:\ProgramData\Chocolatey\bin"
         arm-none-eabi-gcc --version
         arm-none-eabi-objdump --version
         ninja --version
@@ -75,43 +76,43 @@ jobs:
       run: |
         cmake -E remove_directory ${{ github.workspace }}/build
         cmake -E make_directory ${{ github.workspace }}/build
-      shell: powershell
+      shell: bash
 
     - name: List Build Directory (Pre-Configure)
       working-directory: ${{ github.workspace }}/build
-      shell: powershell
       run: dir -Recurse
+      shell: powershell
 
     - name: Configure CMake
       working-directory: ${{ github.workspace }}/build
-      shell: powershell
       run: |
         cmake .. -G Ninja -DPICO_BOARD=pico -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/${{ env.PICO_SDK_DIR }}/pico_sdk_tools.cmake
+      shell: powershell
       env:
         PICO_SDK_PATH: ${{ github.workspace }}/${{ env.PICO_SDK_DIR }}
 
     - name: Verify CMake Generator
       working-directory: ${{ github.workspace }}/build
-      shell: powershell
       run: |
         cmake -L | findstr "CMAKE_GENERATOR"
         dir CMakeFiles | findstr "cmake"
+      shell: powershell
 
     - name: Build Firmware
       working-directory: ${{ github.workspace }}/build
-      shell: powershell
       run: |
         cmake --build . --parallel
+      shell: powershell
 
     - name: List Build Artifacts (Post-Build)
       working-directory: ${{ github.workspace }}/build
-      shell: powershell
       run: dir -Recurse
+      shell: powershell
 
     - name: Check Boot Stage 2 Output
       working-directory: ${{ github.workspace }}/build/pico-sdk/src/rp2040/boot_stage2
-      shell: powershell
       run: dir -Recurse
+      shell: powershell
       continue-on-error: true
 
     - name: Upload firmware artifact
