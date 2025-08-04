@@ -31,41 +31,7 @@ jobs:
         ref: 1.5.1
         path: ${{ env.PICO_SDK_DIR }}
         submodules: recursive
-
-    - name: Verify Pico SDK Checkout
-      run: |
-        Write-Output "Checking Pico SDK directory: ${{ env.PICO_SDK_DIR }}"
-        if (Test-Path ${{ env.PICO_SDK_DIR }}) {
-          Write-Output "Pico SDK directory exists"
-          Write-Output "Pico SDK commit:"
-          git -C ${{ env.PICO_SDK_DIR }} rev-parse HEAD | Write-Output
-          Write-Output "Pico SDK tag:"
-          git -C ${{ env.PICO_SDK_DIR }} describe --tags | Write-Output
-          Write-Output "Listing key files in ${{ env.PICO_SDK_DIR }}"
-          $toolchainFile = Get-ChildItem -Path ${{ env.PICO_SDK_DIR }} -Recurse -Include pico_sdk_tools.cmake | Select-Object -First 1
-          $importFile = Get-ChildItem -Path ${{ env.PICO_SDK_DIR }} -Recurse -Include pico_sdk_import.cmake | Select-Object -First 1
-          if ($toolchainFile) {
-            Write-Output "Found pico_sdk_tools.cmake at $($toolchainFile.FullName)"
-            $env:TOOLCHAIN_FILE_PATH = $toolchainFile.FullName
-          } else {
-            Write-Error "pico_sdk_tools.cmake not found in ${{ env.PICO_SDK_DIR }}"
-            dir ${{ env.PICO_SDK_DIR }} -Recurse | Write-Output
-            exit 1
-          }
-          if ($importFile) {
-            Write-Output "Found pico_sdk_import.cmake at $($importFile.FullName)"
-          } else {
-            Write-Error "pico_sdk_import.cmake not found in ${{ env.PICO_SDK_DIR }}"
-            dir ${{ env.PICO_SDK_DIR }} -Recurse | Write-Output
-            exit 1
-          }
-        } else {
-          Write-Error "Pico SDK directory does not exist at ${{ env.PICO_SDK_DIR }}"
-          exit 1
-        }
-      shell: powershell
-      working-directory: ${{ github.workspace }}
-
+        
     - name: Cache Pico SDK and dependencies
       uses: actions/cache@v4
       with:
